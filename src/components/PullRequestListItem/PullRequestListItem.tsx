@@ -1,6 +1,6 @@
 import { useFragment } from "@apollo/client/react";
-import { Avatar, Box, Chip, Typography } from "@mui/material";
-import { memo, useMemo } from "react";
+import { Avatar, Box, Chip, Typography, IconButton, Tooltip } from "@mui/material";
+import { memo, useMemo, useState } from "react";
 import { IPrFragment, PrFragmentDoc } from "../../queries/PRFragment";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Icon } from "../Icon";
 import { faCheck, faTimes } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
 import { faRobot } from "@awesome.me/kit-2cb31446e2/icons/duotone/regular";
+import { faEyeSlash, faEye } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { IStatusState } from "../../types/graphqlTypes";
 
 export interface IPullRequestListItemProps {
@@ -22,82 +23,124 @@ export interface IPullRequestListItemProps {
    * The ID of the Pull Request
    */
   prId: string;
+  /**
+   * Whether this PR is hidden
+   */
+  isHidden?: boolean;
+  /**
+   * Callback to hide this PR
+   */
+  onHide?: (prId: string) => void;
+  /**
+   * Callback to unhide this PR
+   */
+  onUnhide?: (prId: string) => void;
 }
 
-export const PullRequestListItem = memo<IPullRequestListItemProps>(({ dataTest = "PullRequestListItem", prId }) => {
-  const { data: pr } = useFragment<IPrFragment>({
-    fragment: PrFragmentDoc,
-    from: {
-      id: prId,
-      __typename: "PullRequest"
-    }
-  });
-  const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number } = pr || {};
-  const { state: checksState } = statusCheckRollup || {};
+export const PullRequestListItem = memo<IPullRequestListItemProps>(
+  ({ dataTest = "PullRequestListItem", prId, isHidden = false, onHide, onUnhide }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const { data: pr } = useFragment<IPrFragment>({
+      fragment: PrFragmentDoc,
+      from: {
+        id: prId,
+        __typename: "PullRequest"
+      }
+    });
+    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number } = pr || {};
+    const { state: checksState } = statusCheckRollup || {};
 
-  const parsedTitle = useMemo(() => {
-    if (!title) return { ticketId: null, rest: "" };
+    const parsedTitle = useMemo(() => {
+      if (!title) return { ticketId: null, rest: "" };
 
-    // Match ticket ID pattern at the start: alphanumeric-numbers (e.g., SQD1-2997, JIRA-123)
-    const match = title.match(/^([A-Z][A-Z0-9]*-\d+)(\s*-?\s*)(.*)$/);
+      // Match ticket ID pattern at the start: alphanumeric-numbers (e.g., SQD1-2997, JIRA-123)
+      const match = title.match(/^([A-Z][A-Z0-9]*-\d+)(\s*-?\s*)(.*)$/);
 
-    if (match) {
-      return {
-        ticketId: match[1],
-        separator: match[2],
-        rest: match[3]
-      };
-    }
+      if (match) {
+        return {
+          ticketId: match[1],
+          separator: match[2],
+          rest: match[3]
+        };
+      }
 
-    return { ticketId: null, rest: title };
-  }, [title]);
+      return { ticketId: null, rest: title };
+    }, [title]);
 
-  const secondaryText = useMemo(() => {
-    if (!author) return null;
-    if (author.__typename === "User") {
-      return `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by ${author.login}`;
-    }
-    return null;
-  }, [author, createdAt]);
+    const secondaryText = useMemo(() => {
+      if (!author) return null;
+      if (author.__typename === "User") {
+        return `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by ${author.login}`;
+      }
+      if (author.__typename === "Bot") {
+        return `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by a bot`;
+      }
+      return null;
+    }, [author, createdAt]);
 
-  return (
-    <ListItem>
-      <ListItemButton href={url} target="_blank" rel="noopener noreferrer">
-        <ListItemAvatar>
-          {author && author.__typename === "User" && <Avatar src={author.avatarUrl} />}
-          {author && author.__typename === "Bot" && (
-            <Avatar>
-              <Icon icon={faRobot} size={20} />
-            </Avatar>
-          )}
-        </ListItemAvatar>
-        <ListItemText
-          primary={
-            <Box display="flex" alignItems="center" gap={1} flexWrap={"wrap"}>
-              <Typography variant="body1" component="span">
-                {parsedTitle.ticketId ? (
-                  <>
-                    <Typography fontWeight={"bold"} component="span">
-                      {parsedTitle.ticketId}
-                    </Typography>
-                    {parsedTitle.separator}
-                    {parsedTitle.rest}
-                  </>
-                ) : (
-                  title
-                )}
-              </Typography>
-              <Icon
-                icon={checksState === IStatusState.SUCCESS ? faCheck : faTimes}
-                color={checksState === IStatusState.SUCCESS ? "success" : "error"}
-                size="small"
-              />
-            </Box>
-          }
-          secondary={secondaryText}
-        />
-        <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
-      </ListItemButton>
-    </ListItem>
-  );
-});
+    const handleHideClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isHidden && onUnhide) {
+        onUnhide(prId);
+      } else if (!isHidden && onHide) {
+        onHide(prId);
+      }
+    };
+
+    return (
+      <ListItem
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        sx={{
+          opacity: isHidden ? 0.6 : 1,
+          transition: "opacity 0.2s"
+        }}
+      >
+        <ListItemButton href={url} target="_blank" rel="noopener noreferrer">
+          <ListItemAvatar>
+            {author && author.__typename === "User" && <Avatar src={author.avatarUrl} />}
+            {author && author.__typename === "Bot" && (
+              <Avatar>
+                <Icon icon={faRobot} size={20} />
+              </Avatar>
+            )}
+          </ListItemAvatar>
+          <ListItemText
+            primary={
+              <Box display="flex" alignItems="center" gap={1} flexWrap={"wrap"}>
+                <Typography variant="body1" component="span">
+                  {parsedTitle.ticketId ? (
+                    <>
+                      <Typography fontWeight={"bold"} component="span">
+                        {parsedTitle.ticketId}
+                      </Typography>
+                      {parsedTitle.separator}
+                      {parsedTitle.rest}
+                    </>
+                  ) : (
+                    title
+                  )}
+                </Typography>
+                <Icon
+                  icon={checksState === IStatusState.SUCCESS ? faCheck : faTimes}
+                  color={checksState === IStatusState.SUCCESS ? "success" : "error"}
+                  size="small"
+                />
+              </Box>
+            }
+            secondary={secondaryText}
+          />
+          <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
+        </ListItemButton>
+        {(isHovered || isHidden) && (onHide || onUnhide) && (
+          <Tooltip title={isHidden ? "Unhide PR" : "Hide PR"}>
+            <IconButton onClick={handleHideClick} size="small" sx={{ ml: 1 }} color={isHidden ? "primary" : "default"}>
+              <Icon icon={isHidden ? faEye : faEyeSlash} size={20} />
+            </IconButton>
+          </Tooltip>
+        )}
+      </ListItem>
+    );
+  }
+);
