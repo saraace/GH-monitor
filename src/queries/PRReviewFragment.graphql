@@ -1,0 +1,12 @@
+fragment PRReview on PullRequestReview {
+  id
+  state
+  createdAt
+  author {
+    ... on User {
+      id
+      login
+      avatarUrl(size: 64)
+    }
+  }
+}

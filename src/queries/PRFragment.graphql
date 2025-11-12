@@ -1,16 +1,21 @@
+# import PRReview from "./PRReviewFragment.graphql"
+
 fragment PR on PullRequest {
   id
   title
   state
   isDraft
-  merged
   url
   createdAt
-  changedFiles
   lastEditedAt
-  additions
   reviewDecision
   number
+  lastEditedAt
+  latestReviews(first: 20) {
+    nodes {
+      ...PRReview
+    }
+  }
   statusCheckRollup {
     id
     state

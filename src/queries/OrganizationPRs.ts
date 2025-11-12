@@ -1,85 +1,104 @@
 /* eslint-disable */
 
-/**
- * This was auto-generated, girl. Don't touch it.
- */
+              /**
+               * This was auto-generated, girl. Don't touch it.
+               */
+            
+import * as Types from '../types/graphqlTypes';
 
-import * as Types from "../types/graphqlTypes";
-
-import { gql } from "@apollo/client";
-import { PrFragmentDoc } from "./PRFragment";
-import * as ApolloReactCommon from "@apollo/client/react";
-import * as ApolloReactHooks from "@apollo/client/react";
+import { gql } from '@apollo/client';
+import { PrFragmentDoc } from './PRFragment';
+import * as ApolloReactCommon from '@apollo/client/react';
+import * as ApolloReactHooks from '@apollo/client/react';
 const defaultOptions = {} as const;
 export type IOrganizationPRsQueryVariables = Types.Exact<{
-  orgName: Types.Scalars["String"]["input"];
-  repoName: Types.Scalars["String"]["input"];
-  first?: Types.InputMaybe<Types.Scalars["Int"]["input"]>;
+  orgName: Types.Scalars['String']['input'];
+  repoName: Types.Scalars['String']['input'];
+  first?: Types.InputMaybe<Types.Scalars['Int']['input']>;
   pullRequestStates?: Types.InputMaybe<Array<Types.IPullRequestState> | Types.IPullRequestState>;
   orderBy?: Types.InputMaybe<Types.IIssueOrder>;
-  after?: Types.InputMaybe<Types.Scalars["String"]["input"]>;
+  after?: Types.InputMaybe<Types.Scalars['String']['input']>;
 }>;
 
-export type IOrganizationPRsQuery = { __typename?: "Query" } & {
-  repository?: Types.Maybe<
-    { __typename?: "Repository" } & Pick<Types.IRepository, "id" | "name"> & {
-        pullRequests: { __typename?: "PullRequestConnection" } & {
-          nodes?: Types.Maybe<
-            Array<
-              Types.Maybe<
-                { __typename?: "PullRequest" } & Pick<
-                  Types.IPullRequest,
-                  | "id"
-                  | "title"
-                  | "state"
-                  | "isDraft"
-                  | "merged"
-                  | "url"
-                  | "createdAt"
-                  | "changedFiles"
-                  | "lastEditedAt"
-                  | "additions"
-                  | "reviewDecision"
-                  | "number"
-                > & {
-                    statusCheckRollup?: Types.Maybe<{ __typename?: "StatusCheckRollup" } & Pick<Types.IStatusCheckRollup, "id" | "state">>;
-                    author?: Types.Maybe<
-                      | { __typename?: "Bot" }
-                      | { __typename?: "EnterpriseUserAccount" }
-                      | { __typename?: "Mannequin" }
-                      | { __typename?: "Organization" }
-                      | ({ __typename?: "User" } & Pick<Types.IUser, "id" | "avatarUrl" | "login">)
-                    >;
-                  }
-              >
-            >
-          >;
-        };
-      }
-  >;
-};
+
+export type IOrganizationPRsQuery = (
+  { __typename?: 'Query' }
+  & { repository?: Types.Maybe<(
+    { __typename?: 'Repository' }
+    & Pick<Types.IRepository, 'id' | 'name'>
+    & { pullRequests: (
+      { __typename?: 'PullRequestConnection' }
+      & { nodes?: Types.Maybe<Array<Types.Maybe<(
+        { __typename?: 'PullRequest' }
+        & Pick<
+          Types.IPullRequest,
+          | 'id'
+          | 'title'
+          | 'state'
+          | 'isDraft'
+          | 'url'
+          | 'createdAt'
+          | 'lastEditedAt'
+          | 'reviewDecision'
+          | 'number'
+        >
+        & {
+          latestReviews?: Types.Maybe<(
+            { __typename?: 'PullRequestReviewConnection' }
+            & { nodes?: Types.Maybe<Array<Types.Maybe<(
+              { __typename?: 'PullRequestReview' }
+              & Pick<Types.IPullRequestReview, 'id' | 'state' | 'createdAt'>
+              & { author?: Types.Maybe<
+                | { __typename?: 'Bot' }
+                | { __typename?: 'EnterpriseUserAccount' }
+                | { __typename?: 'Mannequin' }
+                | { __typename?: 'Organization' }
+                | (
+                  { __typename?: 'User' }
+                  & Pick<Types.IUser, 'id' | 'login' | 'avatarUrl'>
+                )
+              > }
+            )>>> }
+          )>,
+          statusCheckRollup?: Types.Maybe<(
+            { __typename?: 'StatusCheckRollup' }
+            & Pick<Types.IStatusCheckRollup, 'id' | 'state'>
+          )>,
+          author?: Types.Maybe<
+            | { __typename?: 'Bot' }
+            | { __typename?: 'EnterpriseUserAccount' }
+            | { __typename?: 'Mannequin' }
+            | { __typename?: 'Organization' }
+            | (
+              { __typename?: 'User' }
+              & Pick<Types.IUser, 'id' | 'avatarUrl' | 'login'>
+            )
+          >,
+        }
+      )>>> }
+    ) }
+  )> }
+);
+
 
 export const OrganizationPRsDocument = gql`
-  query OrganizationPRs(
-    $orgName: String!
-    $repoName: String!
-    $first: Int
-    $pullRequestStates: [PullRequestState!]
-    $orderBy: IssueOrder
-    $after: String
-  ) {
-    repository(owner: $orgName, name: $repoName) {
-      id
-      name
-      pullRequests(first: $first, after: $after, states: $pullRequestStates, orderBy: $orderBy) {
-        nodes {
-          ...PR
-        }
+    query OrganizationPRs($orgName: String!, $repoName: String!, $first: Int, $pullRequestStates: [PullRequestState!], $orderBy: IssueOrder, $after: String) {
+  repository(owner: $orgName, name: $repoName) {
+    id
+    name
+    pullRequests(
+      first: $first
+      after: $after
+      states: $pullRequestStates
+      orderBy: $orderBy
+    ) {
+      nodes {
+        ...PR
       }
     }
   }
-  ${PrFragmentDoc}
-`;
+}
+    ${PrFragmentDoc}`;
 
 /**
  * __useOrganizationPRsQuery__
@@ -102,25 +121,18 @@ export const OrganizationPRsDocument = gql`
  *   },
  * });
  */
-export function useOrganizationPRsQuery(
-  baseOptions: ApolloReactHooks.QueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables> &
-    ({ variables: IOrganizationPRsQueryVariables; skip?: boolean } | { skip: boolean })
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
-}
-export function useOrganizationPRsLazyQuery(
-  baseOptions?: ApolloReactHooks.LazyQueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useLazyQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
-}
-export function useOrganizationPRsSuspenseQuery(
-  baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>
-) {
-  const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : { ...defaultOptions, ...baseOptions };
-  return ApolloReactHooks.useSuspenseQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
-}
+export function useOrganizationPRsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables> & ({ variables: IOrganizationPRsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
+      }
+export function useOrganizationPRsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
+        }
+export function useOrganizationPRsSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<IOrganizationPRsQuery, IOrganizationPRsQueryVariables>(OrganizationPRsDocument, options);
+        }
 export type OrganizationPRsQueryHookResult = ReturnType<typeof useOrganizationPRsQuery>;
 export type OrganizationPRsLazyQueryHookResult = ReturnType<typeof useOrganizationPRsLazyQuery>;
 export type OrganizationPRsSuspenseQueryHookResult = ReturnType<typeof useOrganizationPRsSuspenseQuery>;

@@ -1,5 +1,5 @@
 import { useFragment } from "@apollo/client/react";
-import { Avatar, Box, Chip, Typography, IconButton, Tooltip } from "@mui/material";
+import { Avatar, Box, Typography, IconButton, Tooltip, Stack } from "@mui/material";
 import { memo, useMemo, useState } from "react";
 import { IPrFragment, PrFragmentDoc } from "../../queries/PRFragment";
 import ListItem from "@mui/material/ListItem";
@@ -7,12 +7,14 @@ import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { PullRequestStatusChip } from "./PullRequestStatusChip";
+import { PullRequestViewerReviewStatus } from "./PullRequestViewerReviewStatus";
 import { formatDistanceToNow } from "date-fns";
 import { Icon } from "../Icon";
 import { faCheck, faTimes } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
 import { faRobot } from "@awesome.me/kit-2cb31446e2/icons/duotone/regular";
 import { faEyeSlash, faEye } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { IStatusState } from "../../types/graphqlTypes";
+import compact from "lodash/compact";
 
 export interface IPullRequestListItemProps {
   /**
@@ -42,13 +44,16 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
     const [isHovered, setIsHovered] = useState(false);
     const { data: pr } = useFragment<IPrFragment>({
       fragment: PrFragmentDoc,
+      fragmentName: "PR",
       from: {
         id: prId,
         __typename: "PullRequest"
       }
     });
-    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number } = pr || {};
+    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, latestReviews } = pr || {};
     const { state: checksState } = statusCheckRollup || {};
+    const { nodes: latestReviewsNodes } = latestReviews || {};
+    const latestReviewsArray = useMemo(() => compact(latestReviewsNodes) || [], [latestReviewsNodes]);
 
     const parsedTitle = useMemo(() => {
       if (!title) return { ticketId: null, rest: "" };
@@ -131,7 +136,10 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
             }
             secondary={secondaryText}
           />
-          <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
+          <Stack alignItems="flex-end" gap={1}>
+            <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
+            <PullRequestViewerReviewStatus latestReviews={latestReviewsArray} />
+          </Stack>
         </ListItemButton>
         {(isHovered || isHidden) && (onHide || onUnhide) && (
           <Tooltip title={isHidden ? "Unhide PR" : "Hide PR"}>

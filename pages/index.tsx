@@ -21,6 +21,7 @@ export default function Home() {
   const { hiddenPRs, hidePR, unhidePR } = useHiddenPRs();
 
   const { data, loading } = useOrganizationPRsQuery({
+    pollInterval: 60000,
     variables: {
       orgName: "transfixio",
       repoName: selectedRepo,
