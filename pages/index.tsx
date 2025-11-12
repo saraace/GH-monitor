@@ -6,7 +6,7 @@ import List from "@mui/material/List";
 import Stack from "@mui/material/Stack";
 import { PullRequestListItem } from "../src/components/PullRequestListItem/PullRequestListItem";
 import { ToggleButton, ToggleButtonGroup, Switch, FormControlLabel, Divider, Card } from "@mui/material";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useHiddenPRs } from "../src/hooks/useHiddenPRs";
@@ -18,10 +18,11 @@ const repos = ["wilson", "broker-platform-svc", "transfix-libraries"] as const;
 export default function Home() {
   const [selectedRepo, setSelectedRepo] = useState<string>("wilson");
   const [showHidden, setShowHidden] = useState<boolean>(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
   const { hiddenPRs, hidePR, unhidePR } = useHiddenPRs();
 
   const { data, loading } = useOrganizationPRsQuery({
-    pollInterval: 60000,
+    pollInterval: 10000,
     variables: {
       orgName: "transfixio",
       repoName: selectedRepo,
@@ -37,12 +38,27 @@ export default function Home() {
   const { pullRequests } = repository || {};
   const { nodes: prs } = pullRequests || {};
 
+  // Track when we've loaded data at least once
+  useEffect(() => {
+    if (data && !loading) {
+      setHasLoadedOnce(true);
+    }
+  }, [data, loading]);
+
+  // Reset hasLoadedOnce when changing repos
+  useEffect(() => {
+    setHasLoadedOnce(false);
+  }, [selectedRepo]);
+
   // Filter PRs based on hidden state
   const filteredPRs = useMemo(() => {
     if (!prs) return [];
     if (showHidden) return prs;
     return prs.filter((pr) => pr && !hiddenPRs.has(pr.id));
   }, [prs, hiddenPRs, showHidden]);
+
+  const isInitialLoading = loading && !hasLoadedOnce;
+  const isPolling = loading && hasLoadedOnce;
   return (
     <Container>
       <Stack gap={4}>
@@ -58,13 +74,54 @@ export default function Home() {
             ))}
           </ToggleButtonGroup>
         </Box>
-        {loading && (
+        {isInitialLoading && (
           <Box display="flex" justifyContent="center" alignItems="center" height="300px">
             <CircularProgress />
           </Box>
         )}
-        {!loading && (filteredPRs.length > 0 || (prs && prs.length > 0)) && (
-          <Card>
+        {!isInitialLoading && (filteredPRs.length > 0 || (prs && prs.length > 0)) && (
+          <Card sx={{ position: "relative", overflow: "visible" }}>
+            {isPolling && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  zIndex: 2,
+                  background: "linear-gradient(90deg, #87b689 0%, #5b8a8f 20%, #9b7a95 40%, #996b4d 60%, #d9935a 80%, #d97b89 100%)",
+                  backgroundSize: "200% 100%",
+                  animation: "rainbow-slide 2s ease-in-out infinite",
+                  "@keyframes rainbow-slide": {
+                    "0%": {
+                      backgroundPosition: "0% 0%"
+                    },
+                    "50%": {
+                      backgroundPosition: "100% 0%"
+                    },
+                    "100%": {
+                      backgroundPosition: "0% 0%"
+                    }
+                  }
+                }}
+              />
+            )}
+            {isPolling && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(255, 255, 255, 0.5)",
+                  backdropFilter: "blur(1px)",
+                  zIndex: 1,
+                  pointerEvents: "none"
+                }}
+              />
+            )}
             <Box display="flex" justifyContent="space-between" alignItems="center" px={2} py={1.5}>
               <Box display="flex" alignItems="center" gap={1}>
                 <Icon icon={faCodePullRequest} size={16} color="success" />
@@ -95,7 +152,7 @@ export default function Home() {
             )}
           </Card>
         )}
-        {!loading && prs && prs.length === 0 && (
+        {!isInitialLoading && prs && prs.length === 0 && (
           <Card>
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={8} gap={2}>
               <Typography variant="h1" fontSize={64}>
