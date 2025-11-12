@@ -165,11 +165,12 @@ const theme = createTheme({
           backgroundColor: "transparent"
         },
         grouped: {
+          background: "transparent",
           margin: 0,
-          border: `2px solid ${colors.primary.main}`,
+          border: `1px solid ${colors.primary.main}`,
           borderRadius: 24, // Full rounded bubble
           "&:not(:first-of-type)": {
-            borderLeft: `2px solid ${colors.primary.main}`,
+            borderLeft: `1px solid ${colors.primary.main}`,
             marginLeft: 0,
             borderRadius: 24
           },
