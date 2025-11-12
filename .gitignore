@@ -27,6 +27,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# npmrc
+.npmrc
+
 # vercel
 .vercel
 
@@ -35,9 +38,5 @@ yarn-error.log*
 next-env.d.ts
 
 # GraphQL generated files
-src/__generated__/
 src/types/graphqlTypes.ts
 src/**/*.graphql.ts
-# Generated operation files (next to .graphql files)
-src/queries/*.ts
-!src/queries/*.graphql

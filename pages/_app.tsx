@@ -7,6 +7,11 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ApolloProvider } from "@apollo/client/react";
 import theme from "../src/theme";
 import apolloClient from "../src/apollo-client";
+import { config } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+
+// Tell Font Awesome to skip auto-inserting CSS since we're importing it above
+config.autoAddCss = false;
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
