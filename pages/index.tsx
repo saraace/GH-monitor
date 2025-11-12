@@ -12,8 +12,9 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useHiddenPRs } from "../src/hooks/useHiddenPRs";
 import { Icon } from "../src/components/Icon";
 import { faCodePullRequest } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
+import { UserGreeting } from "../src/components/UserGreeting";
 
-const repos = ["wilson", "broker-platform-svc", "transfix-libraries"] as const;
+const repos = ["rogers", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
 export default function Home() {
   const [selectedRepo, setSelectedRepo] = useState<string>("wilson");
@@ -62,6 +63,7 @@ export default function Home() {
   return (
     <Container>
       <Stack gap={4}>
+        <UserGreeting />
         <Typography variant="h1" align="center" fontWeight={"regular"} fontStyle={"italic"}>
           Pull Requests
         </Typography>

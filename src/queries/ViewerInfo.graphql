@@ -1,0 +1,8 @@
+query ViewerInfo {
+  viewer {
+    id
+    login
+    name
+    avatarUrl(size: 64)
+  }
+}

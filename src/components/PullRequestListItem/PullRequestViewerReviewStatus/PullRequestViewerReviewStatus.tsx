@@ -4,6 +4,7 @@ import { Avatar, Box, Typography } from "@mui/material";
 import { IPrReviewFragment } from "../../../queries/PRReviewFragment";
 import { IPullRequestReviewState } from "../../../types/graphqlTypes";
 import { formatDistanceToNow } from "date-fns";
+import { useViewer } from "../../../context";
 
 export interface IPullRequestViewerReviewStatusProps {
   /**
@@ -13,10 +14,10 @@ export interface IPullRequestViewerReviewStatusProps {
   viewerReview: Maybe<IPrReviewFragment>;
 }
 
-const VIEWER = "saraace";
-
 export const PullRequestViewerReviewStatus = memo<IPullRequestViewerReviewStatusProps>(
   ({ dataTest = "PullRequestViewerReviewStatus", viewerReview }) => {
+    const { viewer } = useViewer();
+
     return (
       <div data-test={dataTest}>
         {!viewerReview && (
