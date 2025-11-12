@@ -21,6 +21,18 @@ fragment PR on PullRequest {
       login
     }
   }
+  reviewRequests(first: 15) {
+    nodes {
+      id
+      asCodeOwner
+      requestedReviewer {
+        ... on Team {
+          id
+          name
+        }
+      }
+    }
+  }
   viewerLatestReview {
     ...PRReview
   }

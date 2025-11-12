@@ -37,6 +37,22 @@ export type IPrFragment = (
         & Pick<Types.IUser, 'id' | 'avatarUrl' | 'login'>
       )
     >,
+    reviewRequests?: Types.Maybe<(
+      { __typename?: 'ReviewRequestConnection' }
+      & { nodes?: Types.Maybe<Array<Types.Maybe<(
+        { __typename?: 'ReviewRequest' }
+        & Pick<Types.IReviewRequest, 'id' | 'asCodeOwner'>
+        & { requestedReviewer?: Types.Maybe<
+          | { __typename?: 'Bot' }
+          | { __typename?: 'Mannequin' }
+          | (
+            { __typename?: 'Team' }
+            & Pick<Types.ITeam, 'id' | 'name'>
+          )
+          | { __typename?: 'User' }
+        > }
+      )>>> }
+    )>,
     viewerLatestReview?: Types.Maybe<(
       { __typename?: 'PullRequestReview' }
       & Pick<Types.IPullRequestReview, 'id' | 'state' | 'createdAt'>
@@ -74,6 +90,18 @@ export const PrFragmentDoc = gql`
       id
       avatarUrl(size: 64)
       login
+    }
+  }
+  reviewRequests(first: 15) {
+    nodes {
+      id
+      asCodeOwner
+      requestedReviewer {
+        ... on Team {
+          id
+          name
+        }
+      }
     }
   }
   viewerLatestReview {

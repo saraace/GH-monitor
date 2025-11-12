@@ -8,6 +8,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { PullRequestStatusChip } from "./PullRequestStatusChip";
 import { PullRequestViewerReviewStatus } from "./PullRequestViewerReviewStatus";
+import { PullRequestCodeOwnerRequestIndicator } from "./PullRequestCodeOwnerRequestIndicator";
 import { formatDistanceToNow } from "date-fns";
 import { Icon } from "../Icon";
 import { faCheck, faCircleNotch, faTimes } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
@@ -50,7 +51,8 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
         __typename: "PullRequest"
       }
     });
-    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, viewerLatestReview, lastEditedAt } = pr || {};
+    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, viewerLatestReview, lastEditedAt, reviewRequests } =
+      pr || {};
     const { state: checksState } = statusCheckRollup || {};
 
     const parsedTitle = useMemo(() => {
@@ -137,7 +139,10 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
             secondary={secondaryText}
           />
           <Stack alignItems="flex-end" gap={0.5}>
-            <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
+              <PullRequestCodeOwnerRequestIndicator reviewRequests={reviewRequests} />
+            </Box>
             <PullRequestViewerReviewStatus viewerReview={viewerLatestReview as IPrReviewFragment} />
           </Stack>
         </ListItemButton>

@@ -57,6 +57,22 @@ export type IOrganizationPRsQuery = (
               & Pick<Types.IUser, 'id' | 'avatarUrl' | 'login'>
             )
           >,
+          reviewRequests?: Types.Maybe<(
+            { __typename?: 'ReviewRequestConnection' }
+            & { nodes?: Types.Maybe<Array<Types.Maybe<(
+              { __typename?: 'ReviewRequest' }
+              & Pick<Types.IReviewRequest, 'id' | 'asCodeOwner'>
+              & { requestedReviewer?: Types.Maybe<
+                | { __typename?: 'Bot' }
+                | { __typename?: 'Mannequin' }
+                | (
+                  { __typename?: 'Team' }
+                  & Pick<Types.ITeam, 'id' | 'name'>
+                )
+                | { __typename?: 'User' }
+              > }
+            )>>> }
+          )>,
           viewerLatestReview?: Types.Maybe<(
             { __typename?: 'PullRequestReview' }
             & Pick<Types.IPullRequestReview, 'id' | 'state' | 'createdAt'>
