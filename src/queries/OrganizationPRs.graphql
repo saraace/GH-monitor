@@ -1,3 +1,5 @@
+# import PR from "./PRFragment.graphql"
+
 query OrganizationPRs(
   $orgName: String!
   $repoName: String!
@@ -11,29 +13,8 @@ query OrganizationPRs(
     name
     pullRequests(first: $first, after: $after, states: $pullRequestStates, orderBy: $orderBy) {
       nodes {
-        id
-        title
-        state
-        isDraft
-        merged
-        url
-        createdAt
-        changedFiles
-        lastEditedAt
-        additions
-        reviewDecision
-        author {
-          ... on User {
-            avatarUrl(size: 64)
-            login
-            __typename
-          }
-          __typename
-        }
-        __typename
+        ...PR
       }
-      __typename
     }
-    __typename
   }
 }
