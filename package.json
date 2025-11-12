@@ -3,9 +3,9 @@
   "version": "7.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 4242",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 4242",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "post-update": "echo \"codesandbox preview only, need an update\" && pnpm update --latest"
