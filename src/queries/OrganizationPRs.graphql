@@ -1,0 +1,39 @@
+query OrganizationPRs(
+  $orgName: String!
+  $repoName: String!
+  $first: Int
+  $pullRequestStates: [PullRequestState!]
+  $orderBy: IssueOrder
+  $after: String
+) {
+  repository(owner: $orgName, name: $repoName) {
+    id
+    name
+    pullRequests(first: $first, after: $after, states: $pullRequestStates, orderBy: $orderBy) {
+      nodes {
+        id
+        title
+        state
+        isDraft
+        merged
+        url
+        createdAt
+        changedFiles
+        lastEditedAt
+        additions
+        reviewDecision
+        author {
+          ... on User {
+            avatarUrl(size: 64)
+            login
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
