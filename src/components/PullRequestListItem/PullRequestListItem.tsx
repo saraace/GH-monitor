@@ -73,8 +73,8 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(({ dataTest =
         </ListItemAvatar>
         <ListItemText
           primary={
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body1">
+            <Box display="flex" alignItems="center" gap={1} flexWrap={"wrap"}>
+              <Typography variant="body1" component="span">
                 {parsedTitle.ticketId ? (
                   <>
                     <Typography fontWeight={"bold"} component="span">

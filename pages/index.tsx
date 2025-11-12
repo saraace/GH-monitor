@@ -9,6 +9,7 @@ import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Paper from "@mui/material/Paper";
 
 const repos = ["wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
@@ -31,8 +32,8 @@ export default function Home() {
   const { nodes: prs } = pullRequests || {};
   return (
     <Container>
-      <Stack gap={3}>
-        <Typography variant="h1" align="center">
+      <Stack gap={4}>
+        <Typography variant="h1" align="center" fontWeight={"regular"} fontStyle={"italic"}>
           Pull Requests
         </Typography>
         <Box display="flex" justifyContent="center">
@@ -49,7 +50,11 @@ export default function Home() {
             <CircularProgress />
           </Box>
         )}
-        {!loading && prs && prs.length > 0 && <List>{prs?.map((pr) => (pr ? <PullRequestListItem key={pr.id} prId={pr.id} /> : null))}</List>}
+        {!loading && prs && prs.length > 0 && (
+          <Paper elevation={1}>
+            <List>{prs?.map((pr) => (pr ? <PullRequestListItem key={pr.id} prId={pr.id} /> : null))}</List>
+          </Paper>
+        )}
         {!loading && prs && prs.length === 0 && (
           <Typography variant="body1" align="center">
             No pull requests found

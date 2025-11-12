@@ -21,7 +21,7 @@ export const PullRequestStatusChip = memo<IPullRequestStatusChipProps>(({ dataTe
   }, [isDraft, reviewDecision]);
 
   const color = useMemo(() => {
-    if (isDraft) return "default";
+    if (isDraft) return "secondary";
     if (reviewDecision === IPullRequestReviewDecision.APPROVED) return "success";
     if (reviewDecision === IPullRequestReviewDecision.REVIEW_REQUIRED) return "warning";
     if (reviewDecision === IPullRequestReviewDecision.CHANGES_REQUESTED) return "error";

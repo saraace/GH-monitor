@@ -9,6 +9,7 @@ import theme from "../src/theme";
 import apolloClient from "../src/apollo-client";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
+import Box from "@mui/material/Box";
 
 // Tell Font Awesome to skip auto-inserting CSS since we're importing it above
 config.autoAddCss = false;
@@ -22,9 +23,11 @@ export default function MyApp(props: AppProps) {
           <meta name="viewport" content="initial-scale=1, width=device-width" />
         </Head>
         <ThemeProvider theme={theme}>
-          {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-          <CssBaseline />
-          <Component {...pageProps} />
+          <Box py={3}>
+            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+            <CssBaseline />
+            <Component {...pageProps} />
+          </Box>
         </ThemeProvider>
       </AppCacheProvider>
     </ApolloProvider>
