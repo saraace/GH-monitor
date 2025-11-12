@@ -13,6 +13,8 @@ import { useHiddenPRs } from "../src/hooks/useHiddenPRs";
 import { Icon } from "../src/components/Icon";
 import { faCodePullRequest } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { UserGreeting } from "../src/components/UserGreeting";
+import { ThemeToggle } from "../src/components/ThemeToggle";
+import { useThemeToggle } from "../src/context";
 
 const repos = ["rogers", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
@@ -21,6 +23,7 @@ export default function Home() {
   const [showHidden, setShowHidden] = useState<boolean>(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
   const { hiddenPRs, hidePR, unhidePR } = useHiddenPRs();
+  const { themeMode } = useThemeToggle();
 
   const { data, loading } = useOrganizationPRsQuery({
     pollInterval: 60000,
@@ -63,7 +66,12 @@ export default function Home() {
   return (
     <Container>
       <Stack gap={4}>
-        <UserGreeting />
+        <Box position="relative">
+          <UserGreeting />
+          <Box position="absolute" top={0} right={0}>
+            <ThemeToggle />
+          </Box>
+        </Box>
         <Typography variant="h1" align="center" fontWeight={"regular"} fontStyle={"italic"}>
           Pull Requests
         </Typography>
@@ -158,7 +166,7 @@ export default function Home() {
           <Card>
             <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={8} gap={2}>
               <Typography variant="h1" fontSize={64}>
-                ☕
+                {themeMode === "dark" ? "👽" : "☕"}
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 No pull requests found
