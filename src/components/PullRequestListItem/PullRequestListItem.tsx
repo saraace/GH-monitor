@@ -10,11 +10,11 @@ import { PullRequestStatusChip } from "./PullRequestStatusChip";
 import { PullRequestViewerReviewStatus } from "./PullRequestViewerReviewStatus";
 import { formatDistanceToNow } from "date-fns";
 import { Icon } from "../Icon";
-import { faCheck, faTimes } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
+import { faCheck, faCircleNotch, faTimes } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
 import { faRobot } from "@awesome.me/kit-2cb31446e2/icons/duotone/regular";
 import { faEyeSlash, faEye } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { IStatusState } from "../../types/graphqlTypes";
-import compact from "lodash/compact";
+import { IPrReviewFragment } from "../../queries/PRReviewFragment";
 
 export interface IPullRequestListItemProps {
   /**
@@ -50,10 +50,8 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
         __typename: "PullRequest"
       }
     });
-    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, latestReviews } = pr || {};
+    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, viewerLatestReview, lastEditedAt } = pr || {};
     const { state: checksState } = statusCheckRollup || {};
-    const { nodes: latestReviewsNodes } = latestReviews || {};
-    const latestReviewsArray = useMemo(() => compact(latestReviewsNodes) || [], [latestReviewsNodes]);
 
     const parsedTitle = useMemo(() => {
       if (!title) return { ticketId: null, rest: "" };
@@ -74,13 +72,17 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
 
     const secondaryText = useMemo(() => {
       if (!author) return null;
+      let text = null;
       if (author.__typename === "User") {
-        return `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by ${author.login}`;
+        text = `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt, { addSuffix: true })} by ${author.login}`;
       }
       if (author.__typename === "Bot") {
-        return `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by a bot`;
+        text = `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by a bot`;
       }
-      return null;
+      if (lastEditedAt) {
+        text += ` · updated ${formatDistanceToNow(lastEditedAt, { addSuffix: true })}`;
+      }
+      return text;
     }, [author, createdAt]);
 
     const handleHideClick = (e: React.MouseEvent) => {
@@ -127,18 +129,16 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
                     title
                   )}
                 </Typography>
-                <Icon
-                  icon={checksState === IStatusState.SUCCESS ? faCheck : faTimes}
-                  color={checksState === IStatusState.SUCCESS ? "success" : "error"}
-                  size="small"
-                />
+                {checksState === IStatusState.SUCCESS && <Icon icon={faCheck} color="success" size="small" />}
+                {checksState === IStatusState.FAILURE && <Icon icon={faTimes} color="error" size="small" />}
+                {checksState === IStatusState.PENDING && <Icon icon={faCircleNotch} color="warning" size="small" spin />}
               </Box>
             }
             secondary={secondaryText}
           />
-          <Stack alignItems="flex-end" gap={1}>
+          <Stack alignItems="flex-end" gap={0.5}>
             <PullRequestStatusChip reviewDecision={reviewDecision} isDraft={isDraft} />
-            <PullRequestViewerReviewStatus latestReviews={latestReviewsArray} />
+            <PullRequestViewerReviewStatus viewerReview={viewerLatestReview as IPrReviewFragment} />
           </Stack>
         </ListItemButton>
         {(isHovered || isHidden) && (onHide || onUnhide) && (

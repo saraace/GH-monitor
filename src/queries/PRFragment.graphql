@@ -10,12 +10,6 @@ fragment PR on PullRequest {
   lastEditedAt
   reviewDecision
   number
-  lastEditedAt
-  latestReviews(first: 20) {
-    nodes {
-      ...PRReview
-    }
-  }
   statusCheckRollup {
     id
     state
@@ -26,5 +20,8 @@ fragment PR on PullRequest {
       avatarUrl(size: 64)
       login
     }
+  }
+  viewerLatestReview {
+    ...PRReview
   }
 }

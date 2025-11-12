@@ -43,23 +43,6 @@ export type IOrganizationPRsQuery = (
           | 'number'
         >
         & {
-          latestReviews?: Types.Maybe<(
-            { __typename?: 'PullRequestReviewConnection' }
-            & { nodes?: Types.Maybe<Array<Types.Maybe<(
-              { __typename?: 'PullRequestReview' }
-              & Pick<Types.IPullRequestReview, 'id' | 'state' | 'createdAt'>
-              & { author?: Types.Maybe<
-                | { __typename?: 'Bot' }
-                | { __typename?: 'EnterpriseUserAccount' }
-                | { __typename?: 'Mannequin' }
-                | { __typename?: 'Organization' }
-                | (
-                  { __typename?: 'User' }
-                  & Pick<Types.IUser, 'id' | 'login' | 'avatarUrl'>
-                )
-              > }
-            )>>> }
-          )>,
           statusCheckRollup?: Types.Maybe<(
             { __typename?: 'StatusCheckRollup' }
             & Pick<Types.IStatusCheckRollup, 'id' | 'state'>
@@ -74,6 +57,20 @@ export type IOrganizationPRsQuery = (
               & Pick<Types.IUser, 'id' | 'avatarUrl' | 'login'>
             )
           >,
+          viewerLatestReview?: Types.Maybe<(
+            { __typename?: 'PullRequestReview' }
+            & Pick<Types.IPullRequestReview, 'id' | 'state' | 'createdAt'>
+            & { author?: Types.Maybe<
+              | { __typename?: 'Bot' }
+              | { __typename?: 'EnterpriseUserAccount' }
+              | { __typename?: 'Mannequin' }
+              | { __typename?: 'Organization' }
+              | (
+                { __typename?: 'User' }
+                & Pick<Types.IUser, 'id' | 'login' | 'avatarUrl'>
+              )
+            > }
+          )>,
         }
       )>>> }
     ) }

@@ -1,9 +1,9 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 import { useTheme } from "@mui/material/styles";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type { SxProps, Theme } from "@mui/material";
 
-export interface IIconProps {
+export interface IIconProps extends Pick<FontAwesomeIconProps, "beat" | "pulse" | "spin" | "spinPulse"> {
   /**
    * The Font Awesome icon definition
    */
@@ -45,7 +45,7 @@ export interface IIconProps {
   dataTest?: string;
 }
 
-export const Icon = ({ icon, color = "inherit", size = "medium", sx, className, dataTest = "Icon" }: IIconProps) => {
+export const Icon = ({ icon, color = "inherit", size = "medium", sx, className, dataTest = "Icon", ...rest }: IIconProps) => {
   const theme = useTheme();
 
   // Map MUI colors to actual color values from theme
@@ -98,6 +98,7 @@ export const Icon = ({ icon, color = "inherit", size = "medium", sx, className, 
         fontSize: getFontSize(),
         ...(sx && typeof sx === "object" && !Array.isArray(sx) ? (sx as any) : {})
       }}
+      {...rest}
     />
   );
 };

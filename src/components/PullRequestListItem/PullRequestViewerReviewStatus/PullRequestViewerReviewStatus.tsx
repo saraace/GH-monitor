@@ -10,18 +10,13 @@ export interface IPullRequestViewerReviewStatusProps {
    * @default 'PullRequestViewerReviewStatus'
    */
   dataTest?: string;
-  latestReviews: Maybe<IPrReviewFragment>[];
+  viewerReview: Maybe<IPrReviewFragment>;
 }
 
 const VIEWER = "saraace";
 
 export const PullRequestViewerReviewStatus = memo<IPullRequestViewerReviewStatusProps>(
-  ({ dataTest = "PullRequestViewerReviewStatus", latestReviews }) => {
-    const viewerReview = useMemo(() => {
-      if (!latestReviews) return null;
-      return latestReviews.find((review) => review?.author?.__typename === "User" && review?.author?.login === VIEWER);
-    }, [latestReviews]);
-
+  ({ dataTest = "PullRequestViewerReviewStatus", viewerReview }) => {
     return (
       <div data-test={dataTest}>
         {!viewerReview && (
