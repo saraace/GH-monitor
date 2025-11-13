@@ -4,7 +4,6 @@ import { Avatar, Box, Typography } from "@mui/material";
 import { IPrReviewFragment } from "../../../queries/PRReviewFragment";
 import { IPullRequestReviewState } from "../../../types/graphqlTypes";
 import { formatDistanceToNow } from "date-fns";
-import { useViewer } from "../../../context";
 
 export interface IPullRequestViewerReviewStatusProps {
   /**
@@ -16,7 +15,26 @@ export interface IPullRequestViewerReviewStatusProps {
 
 export const PullRequestViewerReviewStatus = memo<IPullRequestViewerReviewStatusProps>(
   ({ dataTest = "PullRequestViewerReviewStatus", viewerReview }) => {
-    const { viewer } = useViewer();
+    const reviewStatusLabel = useMemo(() => {
+      if (!viewerReview) return "You have not reviewed";
+
+      const createdAt = formatDistanceToNow(viewerReview.createdAt, { addSuffix: true });
+
+      if (viewerReview.author?.__typename === "User") {
+        if (viewerReview.state === IPullRequestReviewState.APPROVED) {
+          return `You approved ${createdAt}`;
+        }
+        if (viewerReview.state === IPullRequestReviewState.CHANGES_REQUESTED) {
+          return `You requested changes ${createdAt}`;
+        }
+        if (viewerReview.state === IPullRequestReviewState.COMMENTED) {
+          return `You commented ${createdAt}`;
+        }
+        if (viewerReview.state === IPullRequestReviewState.PENDING) {
+          return `Your review is pending!`;
+        }
+      }
+    }, [viewerReview]);
 
     return (
       <div data-test={dataTest}>
@@ -29,10 +47,7 @@ export const PullRequestViewerReviewStatus = memo<IPullRequestViewerReviewStatus
           <Box display="flex" alignItems="center" gap={0.5}>
             <Avatar src={viewerReview.author.avatarUrl} sx={{ width: 16, height: 16 }} />
             <Typography variant="caption" component="span">
-              {`You ${viewerReview.state === IPullRequestReviewState.APPROVED ? "approved" : "requested changes"} ${formatDistanceToNow(
-                viewerReview.createdAt,
-                { addSuffix: true }
-              )}`}
+              {reviewStatusLabel}
             </Typography>
           </Box>
         )}
