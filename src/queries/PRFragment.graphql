@@ -11,7 +11,9 @@ fragment PR on PullRequest {
   number
   commits(last: 1) {
     nodes {
+      id
       commit {
+        id
         committedDate
       }
     }

@@ -46,9 +46,10 @@ export type IOrganizationPRsQuery = (
             { __typename?: 'PullRequestCommitConnection' }
             & { nodes?: Types.Maybe<Array<Types.Maybe<(
               { __typename?: 'PullRequestCommit' }
+              & Pick<Types.IPullRequestCommit, 'id'>
               & { commit: (
                 { __typename?: 'Commit' }
-                & Pick<Types.ICommit, 'committedDate'>
+                & Pick<Types.ICommit, 'id' | 'committedDate'>
               ) }
             )>>> }
           ),

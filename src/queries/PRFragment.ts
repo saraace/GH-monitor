@@ -26,9 +26,10 @@ export type IPrFragment = (
       { __typename?: 'PullRequestCommitConnection' }
       & { nodes?: Types.Maybe<Array<Types.Maybe<(
         { __typename?: 'PullRequestCommit' }
+        & Pick<Types.IPullRequestCommit, 'id'>
         & { commit: (
           { __typename?: 'Commit' }
-          & Pick<Types.ICommit, 'committedDate'>
+          & Pick<Types.ICommit, 'id' | 'committedDate'>
         ) }
       )>>> }
     ),
@@ -91,7 +92,9 @@ export const PrFragmentDoc = gql`
   number
   commits(last: 1) {
     nodes {
+      id
       commit {
+        id
         committedDate
       }
     }
