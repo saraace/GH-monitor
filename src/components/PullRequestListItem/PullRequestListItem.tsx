@@ -51,7 +51,7 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
         __typename: "PullRequest"
       }
     });
-    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, viewerLatestReview, lastEditedAt, reviewRequests } =
+    const { title, author, reviewDecision, url, isDraft, createdAt, statusCheckRollup, number, viewerLatestReview, commits, reviewRequests } =
       pr || {};
     const { state: checksState } = statusCheckRollup || {};
 
@@ -81,8 +81,8 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
       if (author.__typename === "Bot") {
         text = `${number ? `#${number} ` : ""} opened ${formatDistanceToNow(createdAt)} ago by a bot`;
       }
-      if (lastEditedAt) {
-        text += ` · updated ${formatDistanceToNow(lastEditedAt, { addSuffix: true })}`;
+      if (commits?.nodes?.[0]?.commit?.committedDate) {
+        text += ` · updated ${formatDistanceToNow(commits.nodes[0].commit.committedDate, { addSuffix: true })}`;
       }
       return text;
     }, [author, createdAt]);
@@ -99,6 +99,7 @@ export const PullRequestListItem = memo<IPullRequestListItemProps>(
 
     return (
       <ListItem
+        data-test={dataTest}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         sx={{
