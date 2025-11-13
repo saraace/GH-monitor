@@ -18,11 +18,20 @@ export type IPrFragment = (
     | 'isDraft'
     | 'url'
     | 'createdAt'
-    | 'lastEditedAt'
     | 'reviewDecision'
     | 'number'
   >
   & {
+    commits: (
+      { __typename?: 'PullRequestCommitConnection' }
+      & { nodes?: Types.Maybe<Array<Types.Maybe<(
+        { __typename?: 'PullRequestCommit' }
+        & { commit: (
+          { __typename?: 'Commit' }
+          & Pick<Types.ICommit, 'committedDate'>
+        ) }
+      )>>> }
+    ),
     statusCheckRollup?: Types.Maybe<(
       { __typename?: 'StatusCheckRollup' }
       & Pick<Types.IStatusCheckRollup, 'id' | 'state'>
@@ -78,9 +87,15 @@ export const PrFragmentDoc = gql`
   isDraft
   url
   createdAt
-  lastEditedAt
   reviewDecision
   number
+  commits(last: 1) {
+    nodes {
+      commit {
+        committedDate
+      }
+    }
+  }
   statusCheckRollup {
     id
     state
