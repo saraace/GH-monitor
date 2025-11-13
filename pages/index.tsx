@@ -32,7 +32,7 @@ export default function Home() {
       repoName: selectedRepo,
       first: 100,
       orderBy: {
-        field: IIssueOrderField.UPDATED_AT,
+        field: IIssueOrderField.CREATED_AT,
         direction: IOrderDirection.DESC
       },
       pullRequestStates: [IPullRequestState.OPEN]
