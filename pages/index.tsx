@@ -16,7 +16,7 @@ import { UserGreeting } from "../src/components/UserGreeting";
 import { ThemeToggle } from "../src/components/ThemeToggle";
 import { useThemeToggle } from "../src/context";
 
-const repos = ["rogers", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
+const repos = ["rogers", "transfix", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
 export default function Home() {
   const [selectedRepo, setSelectedRepo] = useState<string>("wilson");
