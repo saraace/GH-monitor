@@ -88,6 +88,8 @@ export const Icon = ({ icon, color = "inherit", size = "medium", sx, className, 
     }
   };
 
+  const fontSize = getFontSize();
+
   return (
     <FontAwesomeIcon
       icon={icon}
@@ -95,7 +97,12 @@ export const Icon = ({ icon, color = "inherit", size = "medium", sx, className, 
       className={className}
       style={{
         color: getColor(),
-        fontSize: getFontSize(),
+        fontSize,
+        width: fontSize,
+        height: fontSize,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
         ...(sx && typeof sx === "object" && !Array.isArray(sx) ? (sx as any) : {})
       }}
       {...rest}
