@@ -1,4 +1,3 @@
-import * as React from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";
 import { AppCacheProvider } from "@mui/material-nextjs/v15-pagesRouter";
@@ -8,8 +7,8 @@ import { ApolloProvider } from "@apollo/client/react";
 import apolloClient from "../src/apollo-client";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
-import Box from "@mui/material/Box";
 import { ViewerProvider, ThemeToggleProvider, useThemeToggle } from "../src/context";
+import { AppLayout } from "../src/layout/AppLayout";
 
 // Tell Font Awesome to skip auto-inserting CSS since we're importing it above
 config.autoAddCss = false;
@@ -21,11 +20,11 @@ function AppContent(props: AppProps) {
   return (
     <ThemeProvider theme={theme}>
       <ViewerProvider>
-        <Box py={3}>
-          {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-          <CssBaseline />
+        {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+        <CssBaseline />
+        <AppLayout>
           <Component {...pageProps} />
-        </Box>
+        </AppLayout>
       </ViewerProvider>
     </ThemeProvider>
   );
