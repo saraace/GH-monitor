@@ -1,6 +1,7 @@
 import Typography from "@mui/material/Typography";
 import { useOrganizationPRsQuery } from "../src/queries/OrganizationPRs";
 import { IIssueOrderField, IOrderDirection, IPullRequestState } from "../src/types/graphqlTypes";
+import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import Stack from "@mui/material/Stack";
 import { PullRequestListItem } from "../src/components/PullRequestListItem/PullRequestListItem";
@@ -12,6 +13,7 @@ import { useHiddenPRs } from "../src/hooks/useHiddenPRs";
 import { Icon } from "../src/components/Icon";
 import { faCodePullRequest } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { useThemeToggle } from "../src/context";
+import { faArrowsRotate } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
 
 const repos = ["rogers", "transfix", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
@@ -22,7 +24,7 @@ export default function Home() {
   const { hiddenPRs, hidePR, unhidePR } = useHiddenPRs();
   const { themeMode } = useThemeToggle();
 
-  const { data, loading } = useOrganizationPRsQuery({
+  const { data, loading, refetch } = useOrganizationPRsQuery({
     pollInterval: 60000,
     variables: {
       orgName: "transfixio",
@@ -128,6 +130,9 @@ export default function Home() {
               <Typography variant="body2" color="text.secondary">
                 {filteredPRs.length} Open Pull Requests
               </Typography>
+              <IconButton onClick={() => refetch()}>
+                <Icon icon={faArrowsRotate} size={12} />
+              </IconButton>
             </Box>
             {hiddenPRs.size > 0 && (
               <FormControlLabel

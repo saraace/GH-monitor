@@ -42,6 +42,10 @@ export type IOrganizationPRsQuery = (
           | 'number'
         >
         & {
+          repository: (
+            { __typename?: 'Repository' }
+            & Pick<Types.IRepository, 'name'>
+          ),
           commits: (
             { __typename?: 'PullRequestCommitConnection' }
             & { nodes?: Types.Maybe<Array<Types.Maybe<(
@@ -96,6 +100,13 @@ export type IOrganizationPRsQuery = (
                 & Pick<Types.IUser, 'id' | 'login' | 'avatarUrl'>
               )
             > }
+          )>,
+          labels?: Types.Maybe<(
+            { __typename?: 'LabelConnection' }
+            & { nodes?: Types.Maybe<Array<Types.Maybe<(
+              { __typename?: 'Label' }
+              & Pick<Types.ILabel, 'id' | 'name' | 'color'>
+            )>>> }
           )>,
         }
       )>>> }

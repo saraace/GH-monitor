@@ -9,6 +9,9 @@ fragment PR on PullRequest {
   createdAt
   reviewDecision
   number
+  repository {
+    name
+  }
   commits(last: 1) {
     nodes {
       id
@@ -43,5 +46,12 @@ fragment PR on PullRequest {
   }
   viewerLatestReview {
     ...PRReview
+  }
+  labels(first: 10) {
+    nodes {
+      id
+      name
+      color
+    }
   }
 }

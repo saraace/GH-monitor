@@ -12,9 +12,14 @@ export interface IAppLayoutProps extends PropsWithChildren {
    * @default 'AppLayout'
    */
   dataTest?: string;
+  /**
+   * If true, children won't be wrapped in a Container
+   * @default false
+   */
+  fullWidth?: boolean;
 }
 
-export const AppLayout = memo<IAppLayoutProps>(({ dataTest = "AppLayout", children }) => {
+export const AppLayout = memo<IAppLayoutProps>(({ dataTest = "AppLayout", children, fullWidth = false }) => {
   const router = useRouter();
   const { viewer } = useViewer();
   const { avatarUrl, login } = viewer || {};
@@ -44,8 +49,8 @@ export const AppLayout = memo<IAppLayoutProps>(({ dataTest = "AppLayout", childr
           </Box>
         </Toolbar>
       </AppBar>
-      <Box sx={{ mt: 8 }}>
-        <Container>{children}</Container>
+      <Box sx={{ mt: 8, px: fullWidth ? 3 : 0 }}>
+        {fullWidth ? children : <Container>{children}</Container>}
       </Box>
     </div>
   );

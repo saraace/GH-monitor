@@ -1,0 +1,16 @@
+# import PR from "./PRFragment.graphql"
+
+query SearchPRs($query: String!, $first: Int, $after: String) {
+  search(query: $query, type: ISSUE, first: $first, after: $after) {
+    issueCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on PullRequest {
+        ...PR
+      }
+    }
+  }
+}

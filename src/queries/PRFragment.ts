@@ -22,6 +22,10 @@ export type IPrFragment = (
     | 'number'
   >
   & {
+    repository: (
+      { __typename?: 'Repository' }
+      & Pick<Types.IRepository, 'name'>
+    ),
     commits: (
       { __typename?: 'PullRequestCommitConnection' }
       & { nodes?: Types.Maybe<Array<Types.Maybe<(
@@ -77,6 +81,13 @@ export type IPrFragment = (
         )
       > }
     )>,
+    labels?: Types.Maybe<(
+      { __typename?: 'LabelConnection' }
+      & { nodes?: Types.Maybe<Array<Types.Maybe<(
+        { __typename?: 'Label' }
+        & Pick<Types.ILabel, 'id' | 'name' | 'color'>
+      )>>> }
+    )>,
   }
 );
 
@@ -90,6 +101,9 @@ export const PrFragmentDoc = gql`
   createdAt
   reviewDecision
   number
+  repository {
+    name
+  }
   commits(last: 1) {
     nodes {
       id
@@ -124,6 +138,13 @@ export const PrFragmentDoc = gql`
   }
   viewerLatestReview {
     ...PRReview
+  }
+  labels(first: 10) {
+    nodes {
+      id
+      name
+      color
+    }
   }
 }
     ${PrReviewFragmentDoc}`;
