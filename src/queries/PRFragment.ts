@@ -88,6 +88,13 @@ export type IPrFragment = (
         & Pick<Types.ILabel, 'id' | 'name' | 'color'>
       )>>> }
     )>,
+    reviewThreads: (
+      { __typename?: 'PullRequestReviewThreadConnection' }
+      & { nodes?: Types.Maybe<Array<Types.Maybe<(
+        { __typename?: 'PullRequestReviewThread' }
+        & Pick<Types.IPullRequestReviewThread, 'isResolved'>
+      )>>> }
+    ),
   }
 );
 
@@ -144,6 +151,11 @@ export const PrFragmentDoc = gql`
       id
       name
       color
+    }
+  }
+  reviewThreads(first: 100) {
+    nodes {
+      isResolved
     }
   }
 }

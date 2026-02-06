@@ -54,4 +54,9 @@ fragment PR on PullRequest {
       color
     }
   }
+  reviewThreads(first: 100) {
+    nodes {
+      isResolved
+    }
+  }
 }

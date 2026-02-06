@@ -108,6 +108,13 @@ export type IOrganizationPRsQuery = (
               & Pick<Types.ILabel, 'id' | 'name' | 'color'>
             )>>> }
           )>,
+          reviewThreads: (
+            { __typename?: 'PullRequestReviewThreadConnection' }
+            & { nodes?: Types.Maybe<Array<Types.Maybe<(
+              { __typename?: 'PullRequestReviewThread' }
+              & Pick<Types.IPullRequestReviewThread, 'isResolved'>
+            )>>> }
+          ),
         }
       )>>> }
     ) }

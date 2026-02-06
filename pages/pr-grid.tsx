@@ -1,23 +1,32 @@
 import Typography from "@mui/material/Typography";
 import { useSearchPRsQuery } from "../src/queries/SearchPRs";
 import { IPullRequestReviewDecision, IStatusState } from "../src/types/graphqlTypes";
-import { Card, CardContent, CardHeader, Avatar, Chip, Link, Box, IconButton, Switch, FormControlLabel, Tooltip, Autocomplete, TextField, Checkbox } from "@mui/material";
-import { useMemo, useState } from "react";
-import { 
-  DataGrid, 
-  GridColDef, 
-  GridRenderCellParams,
-  getGridSingleSelectOperators,
-  Toolbar,
-  GridSlotProps,
-  GridFilterModel
-} from "@mui/x-data-grid";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Avatar,
+  Chip,
+  Link,
+  Box,
+  IconButton,
+  Switch,
+  FormControlLabel,
+  Tooltip,
+  Autocomplete,
+  TextField,
+  Checkbox,
+  Badge
+} from "@mui/material";
+import { useMemo, useState, useCallback } from "react";
+import { DataGrid, GridColDef, GridRenderCellParams, getGridSingleSelectOperators, Toolbar, GridSlotProps, GridFilterModel } from "@mui/x-data-grid";
 import { formatDistanceToNow, format } from "date-fns";
 import { Icon } from "../src/components/Icon";
 import { faCheck, faCircleNotch, faTimes, faArrowsRotate } from "@awesome.me/kit-2cb31446e2/icons/classic/solid";
 import { faCodePullRequest, faEyeSlash, faEye } from "@awesome.me/kit-2cb31446e2/icons/classic/regular";
 import { useThemeToggle } from "../src/context";
 import { useHiddenPRs } from "../src/hooks/useHiddenPRs";
+import { useAdaptivePolling } from "../src/hooks/useAdaptivePolling";
 
 const repos = ["rogers", "transfix", "wilson", "broker-platform-svc", "transfix-libraries"] as const;
 
@@ -40,6 +49,7 @@ interface PRRow {
   statusLabel: string;
   checksState: IStatusState | null;
   checksLabel: string;
+  unresolvedCount: number;
   createdAt: string;
   updatedAt: string | null;
   url: string;
@@ -68,7 +78,10 @@ const getReviewDecisionLabel = (decision: IPullRequestReviewDecision | null, isD
   return "—";
 };
 
-const getReviewDecisionColor = (decision: IPullRequestReviewDecision | null, isDraft: boolean): "default" | "secondary" | "success" | "warning" | "error" => {
+const getReviewDecisionColor = (
+  decision: IPullRequestReviewDecision | null,
+  isDraft: boolean
+): "default" | "secondary" | "success" | "warning" | "error" => {
   if (isDraft) return "secondary";
   if (decision === IPullRequestReviewDecision.APPROVED) return "success";
   if (decision === IPullRequestReviewDecision.REVIEW_REQUIRED) return "warning";
@@ -76,10 +89,7 @@ const getReviewDecisionColor = (decision: IPullRequestReviewDecision | null, isD
   return "default";
 };
 
-const getColumns = (
-  hidePR: (id: string) => void,
-  unhidePR: (id: string) => void
-): GridColDef<PRRow>[] => [
+const getColumns = (hidePR: (id: string) => void, unhidePR: (id: string) => void): GridColDef<PRRow>[] => [
   {
     field: "number",
     headerName: "#",
@@ -89,9 +99,9 @@ const getColumns = (
         href={params.row.url}
         target="_blank"
         rel="noopener noreferrer"
-        sx={{ 
-          display: "flex", 
-          alignItems: "center", 
+        sx={{
+          display: "flex",
+          alignItems: "center",
           gap: 0.5,
           textDecoration: "none",
           "&:hover": { textDecoration: "underline" }
@@ -108,16 +118,9 @@ const getColumns = (
     width: 120,
     type: "singleSelect",
     valueOptions: [...repos],
-    filterOperators: getGridSingleSelectOperators().filter(
-      (operator) => operator.value === "is" || operator.value === "isAnyOf"
-    ),
+    filterOperators: getGridSingleSelectOperators().filter((operator) => operator.value === "is" || operator.value === "isAnyOf"),
     renderCell: (params: GridRenderCellParams<PRRow>) => (
-      <Chip 
-        label={params.value} 
-        size="small" 
-        variant="outlined"
-        sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}
-      />
+      <Chip label={params.value} size="small" variant="outlined" sx={{ fontFamily: "monospace", fontSize: "0.75rem" }} />
     )
   },
   {
@@ -129,14 +132,14 @@ const getColumns = (
       const title = params.value as string;
       const match = title.match(/^([A-Z][A-Z0-9]*-\d+)(\s*-?\s*)(.*)$/);
       const labels = params.row.labels || [];
-      
+
       return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%", opacity: params.row.isHidden ? 0.5 : 1 }}>
           <Link
             href={params.row.url}
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ 
+            sx={{
               textDecoration: "none",
               "&:hover": { textDecoration: "underline" },
               overflow: "hidden",
@@ -186,10 +189,7 @@ const getColumns = (
     width: 160,
     renderCell: (params: GridRenderCellParams<PRRow>) => (
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, opacity: params.row.isHidden ? 0.5 : 1 }}>
-        <Avatar 
-          src={params.row.authorAvatar} 
-          sx={{ width: 24, height: 24 }}
-        />
+        <Avatar src={params.row.authorAvatar} sx={{ width: 24, height: 24 }} />
         <Typography variant="body2" noWrap>
           {params.value}
         </Typography>
@@ -202,17 +202,29 @@ const getColumns = (
     width: 150,
     type: "singleSelect",
     valueOptions: STATUS_OPTIONS,
-    filterOperators: getGridSingleSelectOperators().filter(
-      (operator) => operator.value === "is" || operator.value === "isAnyOf"
-    ),
+    filterOperators: getGridSingleSelectOperators().filter((operator) => operator.value === "is" || operator.value === "isAnyOf"),
     renderCell: (params: GridRenderCellParams<PRRow>) => {
       const label = params.value as string;
       const color = getReviewDecisionColor(params.row.reviewDecision, params.row.isDraft);
-      return label !== "—" ? (
-        <Chip label={label} color={color} size="small" sx={{ opacity: params.row.isHidden ? 0.5 : 1 }} />
-      ) : (
-        <Typography variant="body2" color="text.secondary">—</Typography>
-      );
+      const unresolvedCount = params.row.unresolvedCount;
+      const statusChip =
+        label !== "—" ? (
+          <Chip label={label} color={color} size="small" sx={{ opacity: params.row.isHidden ? 0.5 : 1 }} />
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            —
+          </Typography>
+        );
+      if (unresolvedCount > 0 && label !== "—") {
+        return (
+          <Tooltip title={`${unresolvedCount} unresolved review comment${unresolvedCount === 1 ? "" : "s"} — must resolve before merge`}>
+            <Badge badgeContent={unresolvedCount} color="primary">
+              {statusChip}
+            </Badge>
+          </Tooltip>
+        );
+      }
+      return statusChip;
     }
   },
   {
@@ -223,15 +235,17 @@ const getColumns = (
     headerAlign: "center",
     type: "singleSelect",
     valueOptions: CHECKS_OPTIONS,
-    filterOperators: getGridSingleSelectOperators().filter(
-      (operator) => operator.value === "is" || operator.value === "isAnyOf"
-    ),
+    filterOperators: getGridSingleSelectOperators().filter((operator) => operator.value === "is" || operator.value === "isAnyOf"),
     renderCell: (params: GridRenderCellParams<PRRow>) => {
       const state = params.row.checksState;
       if (state === IStatusState.SUCCESS) return <Icon icon={faCheck} color="success" size={16} />;
       if (state === IStatusState.FAILURE) return <Icon icon={faTimes} color="error" size={16} />;
       if (state === IStatusState.PENDING) return <Icon icon={faCircleNotch} color="warning" size={16} spin />;
-      return <Typography variant="body2" color="text.secondary">—</Typography>;
+      return (
+        <Typography variant="body2" color="text.secondary">
+          —
+        </Typography>
+      );
     }
   },
   {
@@ -249,10 +263,15 @@ const getColumns = (
     field: "updatedAt",
     headerName: "Updated",
     width: 130,
-    valueGetter: (value: string | null) => value ? new Date(value) : null,
+    valueGetter: (value: string | null) => (value ? new Date(value) : null),
     renderCell: (params: GridRenderCellParams<PRRow>) => {
       const date = params.row.updatedAt;
-      if (!date) return <Typography variant="body2" color="text.secondary">—</Typography>;
+      if (!date)
+        return (
+          <Typography variant="body2" color="text.secondary">
+            —
+          </Typography>
+        );
       return (
         <Typography variant="body2" title={format(new Date(date), "PPpp")} sx={{ opacity: params.row.isHidden ? 0.5 : 1 }}>
           {formatDistanceToNow(new Date(date), { addSuffix: true })}
@@ -271,7 +290,7 @@ const getColumns = (
       <Tooltip title={params.row.isHidden ? "Unhide PR" : "Hide PR"}>
         <IconButton
           size="small"
-          onClick={() => params.row.isHidden ? unhidePR(params.row.id) : hidePR(params.row.id)}
+          onClick={() => (params.row.isHidden ? unhidePR(params.row.id) : hidePR(params.row.id))}
           color={params.row.isHidden ? "primary" : "default"}
         >
           <Icon icon={params.row.isHidden ? faEye : faEyeSlash} size={16} />
@@ -283,55 +302,50 @@ const getColumns = (
 
 // Build GitHub search query string for server-side filtering
 // Note: GitHub GraphQL search API doesn't support sorting in query string - we sort client-side
-function buildSearchQuery(
-  repoFilter: string[],
-  authorFilter: string[],
-  statusFilter: string[],
-  checksFilter: string[]
-): string {
+function buildSearchQuery(repoFilter: string[], authorFilter: string[], statusFilter: string[], checksFilter: string[]): string {
   const parts: string[] = ["is:pr", "is:open"];
-  
+
   // Repository filter - if specific repos selected, use repo: qualifier
   // Otherwise, use org: to search all repos in the org
   if (repoFilter.length > 0) {
-    repoFilter.forEach(r => parts.push(`repo:transfixio/${r}`));
+    repoFilter.forEach((r) => parts.push(`repo:transfixio/${r}`));
   } else {
     parts.push("org:transfixio");
   }
-  
+
   // Author filter (server-side)
   if (authorFilter.length === 1) {
     parts.push(`author:${authorFilter[0]}`);
   } else if (authorFilter.length > 1) {
     // GitHub search supports multiple author: prefixes
-    authorFilter.forEach(a => parts.push(`author:${a}`));
+    authorFilter.forEach((a) => parts.push(`author:${a}`));
   }
-  
+
   // Status filter - map our labels to GitHub search qualifiers
   const statusMappings: Record<string, string> = {
-    "Approved": "review:approved",
+    Approved: "review:approved",
     "Changes requested": "review:changes_requested",
     "Review required": "review:required",
-    "Draft": "draft:true",
+    Draft: "draft:true"
   };
-  
-  statusFilter.forEach(status => {
+
+  statusFilter.forEach((status) => {
     const mapping = statusMappings[status];
     if (mapping) parts.push(mapping);
   });
-  
+
   // Checks filter - map to GitHub status qualifiers
   const checksMappings: Record<string, string> = {
-    "Success": "status:success",
-    "Failure": "status:failure",
-    "Pending": "status:pending",
+    Success: "status:success",
+    Failure: "status:failure",
+    Pending: "status:pending"
   };
-  
-  checksFilter.forEach(check => {
+
+  checksFilter.forEach((check) => {
     const mapping = checksMappings[check];
     if (mapping) parts.push(mapping);
   });
-  
+
   return parts.join(" ");
 }
 
@@ -356,17 +370,8 @@ declare module "@mui/x-data-grid" {
 }
 
 function FilterToolbar(props: GridSlotProps["toolbar"]) {
-  const {
-    repoFilter,
-    setRepoFilter,
-    statusFilter,
-    setStatusFilter,
-    checksFilter,
-    setChecksFilter,
-    authorFilter,
-    setAuthorFilter,
-    authorOptions,
-  } = props;
+  const { repoFilter, setRepoFilter, statusFilter, setStatusFilter, checksFilter, setChecksFilter, authorFilter, setAuthorFilter, authorOptions } =
+    props;
 
   return (
     <Toolbar>
@@ -389,17 +394,15 @@ function FilterToolbar(props: GridSlotProps["toolbar"]) {
             </li>
           );
         }}
-        renderInput={(params) => (
-          <TextField {...params} label="Repository" placeholder="All" />
-        )}
+        renderInput={(params) => <TextField {...params} label="Repository" placeholder="All" />}
         sx={{ minWidth: 200 }}
       />
       <Autocomplete
         multiple
         size="small"
         options={authorOptions}
-        value={authorOptions.filter(a => authorFilter.includes(a.login))}
-        onChange={(_, newValue) => setAuthorFilter(newValue.map(a => a.login))}
+        value={authorOptions.filter((a) => authorFilter.includes(a.login))}
+        onChange={(_, newValue) => setAuthorFilter(newValue.map((a) => a.login))}
         getOptionLabel={(option) => option.login}
         isOptionEqualToValue={(option, value) => option.login === value.login}
         disableCloseOnSelect
@@ -410,35 +413,23 @@ function FilterToolbar(props: GridSlotProps["toolbar"]) {
             <li key={key} {...rest}>
               <Checkbox size="small" checked={selected} sx={{ mr: 1 }} />
               <Avatar src={option.avatarUrl} sx={{ width: 20, height: 20, mr: 1 }} />
-              <Typography variant="body2">
-                {option.login}
-              </Typography>
+              <Typography variant="body2">{option.login}</Typography>
             </li>
           );
         }}
         renderValue={(value, getTagProps) =>
           value.map((option, index) => {
             const { key, ...tagProps } = getTagProps({ index });
-            return (
-              <Chip
-                key={key}
-                avatar={<Avatar src={option.avatarUrl} />}
-                label={option.login}
-                size="small"
-                {...tagProps}
-              />
-            );
+            return <Chip key={key} avatar={<Avatar src={option.avatarUrl} />} label={option.login} size="small" {...tagProps} />;
           })
         }
-        renderInput={(params) => (
-          <TextField {...params} label="Author" placeholder="All" />
-        )}
+        renderInput={(params) => <TextField {...params} label="Author" placeholder="All" />}
         sx={{ minWidth: 200 }}
       />
       <Autocomplete
         multiple
         size="small"
-        options={STATUS_OPTIONS.filter(s => s !== "—")}
+        options={STATUS_OPTIONS.filter((s) => s !== "—")}
         value={statusFilter}
         onChange={(_, newValue) => setStatusFilter(newValue)}
         disableCloseOnSelect
@@ -452,15 +443,13 @@ function FilterToolbar(props: GridSlotProps["toolbar"]) {
             </li>
           );
         }}
-        renderInput={(params) => (
-          <TextField {...params} label="Status" placeholder="All" />
-        )}
+        renderInput={(params) => <TextField {...params} label="Status" placeholder="All" />}
         sx={{ minWidth: 180 }}
       />
       <Autocomplete
         multiple
         size="small"
-        options={CHECKS_OPTIONS.filter(s => s !== "—")}
+        options={CHECKS_OPTIONS.filter((s) => s !== "—")}
         value={checksFilter}
         onChange={(_, newValue) => setChecksFilter(newValue)}
         disableCloseOnSelect
@@ -474,9 +463,7 @@ function FilterToolbar(props: GridSlotProps["toolbar"]) {
             </li>
           );
         }}
-        renderInput={(params) => (
-          <TextField {...params} label="Checks" placeholder="All" />
-        )}
+        renderInput={(params) => <TextField {...params} label="Checks" placeholder="All" />}
         sx={{ minWidth: 160 }}
       />
       <Box sx={{ flexGrow: 1 }} />
@@ -488,7 +475,15 @@ export default function PRGrid() {
   const { themeMode } = useThemeToggle();
   const { hiddenPRs, hidePR, unhidePR } = useHiddenPRs();
   const [showHidden, setShowHidden] = useState(false);
-  
+
+  // Adaptive polling hook
+  const { pollInterval, triggerRefreshBoost } = useAdaptivePolling({
+    activeInterval: 30000, // 30s when active
+    idleInterval: 60000, // 60s when idle
+    inactiveInterval: 300000, // 5min when tab hidden
+    refreshBoostInterval: 15000 // 15s after manual refresh
+  });
+
   // Filter states
   const [repoFilter, setRepoFilter] = useState<string[]>(["rogers", "wilson"]);
   const [authorFilter, setAuthorFilter] = useState<string[]>([]);
@@ -504,28 +499,35 @@ export default function PRGrid() {
     [repoFilter, authorFilter, statusFilter, checksFilter]
   );
 
-  // Single search query with server-side filtering
+  // Single search query with adaptive polling
   const { data, loading, refetch } = useSearchPRsQuery({
+    pollInterval,
     variables: {
       query: searchQueryString,
-      first: 100,
-    },
+      first: 100
+    }
   });
+
+  // Enhanced refetch that triggers refresh boost
+  const handleManualRefresh = useCallback(() => {
+    triggerRefreshBoost();
+    refetch();
+  }, [refetch, triggerRefreshBoost]);
 
   const allRows: PRRow[] = useMemo(() => {
     const rows: PRRow[] = [];
     const nodes = data?.search?.nodes;
-    
+
     if (!nodes) return rows;
-    
+
     nodes.forEach((node) => {
       // Only process PullRequest nodes
       if (!node || node.__typename !== "PullRequest") return;
-      
+
       const pr = node;
       const checksState = pr.statusCheckRollup?.state || null;
       const repoName = pr.repository?.name || "unknown";
-      
+
       rows.push({
         id: pr.id,
         number: pr.number,
@@ -538,20 +540,25 @@ export default function PRGrid() {
         isDraft: pr.isDraft || false,
         statusLabel: getReviewDecisionLabel(pr.reviewDecision || null, pr.isDraft || false),
         checksState,
-        checksLabel: checksState === IStatusState.SUCCESS ? "Success" 
-          : checksState === IStatusState.FAILURE ? "Failure"
-          : checksState === IStatusState.PENDING ? "Pending" 
-          : "—",
+        checksLabel:
+          checksState === IStatusState.SUCCESS
+            ? "Success"
+            : checksState === IStatusState.FAILURE
+              ? "Failure"
+              : checksState === IStatusState.PENDING
+                ? "Pending"
+                : "—",
+        unresolvedCount: (pr.reviewThreads?.nodes ?? []).filter((t) => t != null && t.isResolved === false).length,
         createdAt: pr.createdAt,
         updatedAt: pr.commits?.nodes?.[0]?.commit?.committedDate || null,
         url: pr.url,
         isHidden: hiddenPRs.has(pr.id),
         labels: (pr.labels?.nodes || [])
           .filter((l): l is NonNullable<typeof l> => l !== null)
-          .map(l => ({ id: l.id, name: l.name, color: l.color }))
+          .map((l) => ({ id: l.id, name: l.name, color: l.color }))
       });
     });
-    
+
     // Sort by createdAt descending
     return rows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [data, hiddenPRs]);
@@ -559,18 +566,18 @@ export default function PRGrid() {
   // Only filter hidden rows externally - DataGrid handles the rest via filterModel
   const visibleRows = useMemo(() => {
     if (showHidden) return allRows;
-    return allRows.filter(row => !row.isHidden);
+    return allRows.filter((row) => !row.isHidden);
   }, [allRows, showHidden]);
 
   // Extract unique authors for the filter dropdown
   const authorOptions: AuthorOption[] = useMemo(() => {
     const authorsMap = new Map<string, AuthorOption>();
-    allRows.forEach(row => {
+    allRows.forEach((row) => {
       if (row.authorLogin && row.authorLogin !== "unknown" && row.authorLogin !== "bot") {
         if (!authorsMap.has(row.authorLogin)) {
           authorsMap.set(row.authorLogin, {
             login: row.authorLogin,
-            avatarUrl: row.authorAvatar,
+            avatarUrl: row.authorAvatar
           });
         }
       }
@@ -579,81 +586,92 @@ export default function PRGrid() {
   }, [allRows]);
 
   // Build filterModel - only for quick filter since repo/author/status/checks are server-side
-  const filterModel: GridFilterModel = useMemo(() => ({
-    items: [],
-    quickFilterValues: searchFilter.trim() ? searchFilter.split(" ").filter(Boolean) : [],
-  }), [searchFilter]);
+  const filterModel: GridFilterModel = useMemo(
+    () => ({
+      items: [],
+      quickFilterValues: searchFilter.trim() ? searchFilter.split(" ").filter(Boolean) : []
+    }),
+    [searchFilter]
+  );
 
-  const hiddenCount = useMemo(() => allRows.filter(row => row.isHidden).length, [allRows]);
+  const hiddenCount = useMemo(() => allRows.filter((row) => row.isHidden).length, [allRows]);
 
   return (
-      <Card sx={{ position: "relative" }}>
-        <CardHeader title="Pull Requests" slotProps={{ title: { 
-          variant:'h4', 
-          fontStyle: "italic",
-          fontWeight: "regular",
-         } }} action={
+    <Card sx={{ position: "relative" }}>
+      <CardHeader
+        title="Pull Requests"
+        slotProps={{
+          title: {
+            variant: "h4",
+            fontStyle: "italic",
+            fontWeight: "regular"
+          }
+        }}
+        action={
           <Box display="flex" justifyContent="center" alignItems="center" gap={2} flexWrap="wrap">
-          <IconButton onClick={() => refetch()} disabled={loading}>
-            <Icon icon={faArrowsRotate} size={16} />
-          </IconButton>
-          {hiddenCount > 0 && (
-            <FormControlLabel
-              control={<Switch checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} size="small" />}
-              label={`Show ${hiddenCount} hidden`}
-            />
-          )}
-        </Box>
-        } />
-        <CardContent>
-          <DataGrid
-            rows={visibleRows}
-            columns={columns}
-            filterModel={filterModel}
-            showToolbar={true}
-            loading={loading}
-            slots={{
-              toolbar: FilterToolbar,
-            }}
-            slotProps={{
-              toolbar: {
-                repoFilter,
-                setRepoFilter,
-                authorFilter,
-                setAuthorFilter,
-                authorOptions,
-                statusFilter,
-                setStatusFilter,
-                checksFilter,
-                setChecksFilter,
-              },
-            }}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-              sorting: { sortModel: [{ field: "updatedAt", sort: "desc" }] }
-            }}
-            pageSizeOptions={[10, 25, 50, 100]}
-            disableRowSelectionOnClick
-            autoHeight
-            sx={{
-              background: 'transparent',
-              border: "none",
-              "& .MuiDataGrid-cell": {
-                display: "flex",
-                alignItems: "center"
-              },
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: 'transparent'
-              },
-              '& .MuiDataGrid-columnHeader': {
-                backgroundColor: 'transparent'
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: themeMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
+            <Tooltip title={`Refresh (polling every ${Math.round(pollInterval / 1000)}s)`}>
+              <IconButton onClick={handleManualRefresh} disabled={loading}>
+                <Icon icon={faArrowsRotate} size={16} spin={loading} />
+              </IconButton>
+            </Tooltip>
+            {hiddenCount > 0 && (
+              <FormControlLabel
+                control={<Switch checked={showHidden} onChange={(e) => setShowHidden(e.target.checked)} size="small" />}
+                label={`Show ${hiddenCount} hidden`}
+              />
+            )}
+          </Box>
+        }
+      />
+      <CardContent>
+        <DataGrid
+          rows={visibleRows}
+          columns={columns}
+          filterModel={filterModel}
+          showToolbar={true}
+          loading={loading}
+          slots={{
+            toolbar: FilterToolbar
+          }}
+          slotProps={{
+            toolbar: {
+              repoFilter,
+              setRepoFilter,
+              authorFilter,
+              setAuthorFilter,
+              authorOptions,
+              statusFilter,
+              setStatusFilter,
+              checksFilter,
+              setChecksFilter
+            }
+          }}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 25 } },
+            sorting: { sortModel: [{ field: "updatedAt", sort: "desc" }] }
+          }}
+          pageSizeOptions={[10, 25, 50, 100]}
+          disableRowSelectionOnClick
+          autoHeight
+          sx={{
+            background: "transparent",
+            border: "none",
+            "& .MuiDataGrid-cell": {
+              display: "flex",
+              alignItems: "center"
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "transparent"
+            },
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: "transparent"
+            },
+            "& .MuiDataGrid-row:hover": {
+              backgroundColor: themeMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"
+            }
+          }}
+        />
+      </CardContent>
+    </Card>
   );
 }
