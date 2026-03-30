@@ -55,6 +55,7 @@ interface PRRow {
   url: string;
   isHidden: boolean;
   labels: PRLabel[];
+  readyForReview: boolean;
 }
 
 const STATUS_OPTIONS = ["Draft", "Approved", "Review required", "Changes requested", "—"];
@@ -490,6 +491,7 @@ export default function PRGrid() {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [checksFilter, setChecksFilter] = useState<string[]>([]);
   const [searchFilter, setSearchFilter] = useState("");
+  const [showReadyOnly, setShowReadyOnly] = useState(false);
 
   const columns = useMemo(() => getColumns(hidePR, unhidePR), [hidePR, unhidePR]);
 
@@ -555,7 +557,12 @@ export default function PRGrid() {
         isHidden: hiddenPRs.has(pr.id),
         labels: (pr.labels?.nodes || [])
           .filter((l): l is NonNullable<typeof l> => l !== null)
-          .map((l) => ({ id: l.id, name: l.name, color: l.color }))
+          .map((l) => ({ id: l.id, name: l.name, color: l.color })),
+        readyForReview:
+          checksState === IStatusState.SUCCESS &&
+          !pr.isDraft &&
+          pr.reviewDecision === IPullRequestReviewDecision.REVIEW_REQUIRED &&
+          (pr.labels?.nodes || []).some((l) => l?.name.toLowerCase() === "ready for claude review")
       });
     });
 
@@ -565,9 +572,10 @@ export default function PRGrid() {
 
   // Only filter hidden rows externally - DataGrid handles the rest via filterModel
   const visibleRows = useMemo(() => {
-    if (showHidden) return allRows;
-    return allRows.filter((row) => !row.isHidden);
-  }, [allRows, showHidden]);
+    let rows = showHidden ? allRows : allRows.filter((row) => !row.isHidden);
+    if (showReadyOnly) rows = rows.filter((row) => row.readyForReview);
+    return rows;
+  }, [allRows, showHidden, showReadyOnly]);
 
   // Extract unique authors for the filter dropdown
   const authorOptions: AuthorOption[] = useMemo(() => {
@@ -595,6 +603,7 @@ export default function PRGrid() {
   );
 
   const hiddenCount = useMemo(() => allRows.filter((row) => row.isHidden).length, [allRows]);
+  const readyForReviewCount = useMemo(() => visibleRows.filter((row) => row.readyForReview).length, [visibleRows]);
 
   return (
     <Card sx={{ position: "relative" }}>
@@ -609,6 +618,19 @@ export default function PRGrid() {
         }}
         action={
           <Box display="flex" justifyContent="center" alignItems="center" gap={2} flexWrap="wrap">
+            {readyForReviewCount > 0 && (
+              <FormControlLabel
+                control={<Switch checked={showReadyOnly} onChange={(e) => setShowReadyOnly(e.target.checked)} size="small" />}
+                label={
+                  <Chip
+                    label={`${readyForReviewCount} ready for review`}
+                    color="info"
+                    size="small"
+                    variant={showReadyOnly ? "filled" : "outlined"}
+                  />
+                }
+              />
+            )}
             <Tooltip title={`Refresh (polling every ${Math.round(pollInterval / 1000)}s)`}>
               <IconButton onClick={handleManualRefresh} disabled={loading}>
                 <Icon icon={faArrowsRotate} size={16} spin={loading} />
@@ -630,6 +652,7 @@ export default function PRGrid() {
           filterModel={filterModel}
           showToolbar={true}
           loading={loading}
+          getRowClassName={(params) => (params.row.readyForReview ? "row-ready-for-review" : "")}
           slots={{
             toolbar: FilterToolbar
           }}
@@ -668,6 +691,14 @@ export default function PRGrid() {
             },
             "& .MuiDataGrid-row:hover": {
               backgroundColor: themeMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)"
+            },
+            "& .row-ready-for-review": {
+              borderLeft: "3px solid",
+              borderLeftColor: "info.main",
+              backgroundColor: themeMode === "dark" ? "rgba(41, 182, 246, 0.08)" : "rgba(2, 136, 209, 0.06)"
+            },
+            "& .row-ready-for-review:hover": {
+              backgroundColor: themeMode === "dark" ? "rgba(41, 182, 246, 0.14)" : "rgba(2, 136, 209, 0.10)"
             }
           }}
         />
